@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agriledger — Blockchain Asset Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--green:#1B5E20;--green-mid:#2E7D32;--green-light:#4CAF50;--green-pale:#E8F5E9;--green-pale2:#C8E6C9;
+--amber:#E65100;--amber-light:#FF8F00;--amber-pale:#FFF3E0;
+--soil:#1a1208;--cream:#FAFAF7;--white:#FFFFFF;
+--gray50:#F8F9FA;--gray100:#F1F3F4;--gray200:#E8EAED;--gray400:#9AA0A6;--gray600:#5F6368;--gray900:#202124;
+--blue:#0D47A1;--blue-pale:#E3F2FD;
+--red:#B71C1C;--red-pale:#FFEBEE;
+--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:24px;
+--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+--shadow-md:0 4px 12px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
+}
+body{font-family:'Inter',sans-serif;background:#EDEEE8;color:var(--gray900);min-height:100vh;overflow-x:hidden}
+
+/* LAYOUT */
+.app-shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh;max-width:1400px;margin:0 auto;background:var(--cream);box-shadow:0 0 0 1px rgba(0,0,0,.06)}
+
+/* SIDEBAR */
+.sidebar{background:var(--green);display:flex;flex-direction:column;padding:0}
+.sidebar-logo{padding:28px 24px 24px;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.logo-hex{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.5px;font-weight:400}
+.sidebar-nav{flex:1;padding:16px 12px}
+.nav-section-label{font-size:10px;font-weight:500;color:rgba(255,255,255,.35);letter-spacing:1px;padding:0 12px;margin:20px 0 6px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:.15s;margin-bottom:2px;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.1)}
+.nav-item.active{background:rgba(255,255,255,.18);color:#fff}
+.nav-item .nav-icon{width:20px;text-align:center;font-size:15px;color:rgba(255,255,255,.7)}
+.nav-item.active .nav-icon{color:#fff}
+.nav-label{font-size:13.5px;font-weight:400;color:rgba(255,255,255,.75)}
+.nav-item.active .nav-label{color:#fff;font-weight:500}
+.nav-badge{margin-left:auto;background:var(--amber-light);color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:999px;min-width:20px;text-align:center}
+.sidebar-footer{padding:16px 12px 24px;border-top:1px solid rgba(255,255,255,.1)}
+.user-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-sm)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff}
+.user-name{font-size:13px;color:rgba(255,255,255,.85);font-weight:500}
+.user-role{font-size:11px;color:rgba(255,255,255,.4)}
+
+/* MAIN CONTENT */
+.main{display:flex;flex-direction:column;min-height:100vh;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--gray200);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--gray900)}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:var(--green-mid);color:#fff}
+.btn-primary:hover{background:var(--green)}
+.btn-outline{background:transparent;color:var(--gray600);border:1px solid var(--gray200)}
+.btn-outline:hover{background:var(--gray50);border-color:var(--gray400)}
+.btn-danger{background:var(--red-pale);color:var(--red)}
+.topbar-search{display:flex;align-items:center;gap:8px;background:var(--gray100);border:1px solid transparent;border-radius:var(--radius-sm);padding:7px 14px;width:240px;transition:.15s}
+.topbar-search:focus-within{background:#fff;border-color:var(--green-light)}
+.topbar-search input{border:none;background:transparent;font-size:13px;color:var(--gray900);outline:none;width:100%}
+.topbar-search input::placeholder{color:var(--gray400)}
+
+/* SCREEN CONTENT */
+.screen{display:none;flex:1;overflow-y:auto;padding:28px}
+.screen.active{display:block}
+
+/* DASHBOARD */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--white);border-radius:var(--radius-lg);padding:20px;border:1px solid var(--gray200)}
+.stat-label{font-size:12px;color:var(--gray600);font-weight:400;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;color:var(--gray900);line-height:1}
+.stat-sub{font-size:11px;color:var(--green-mid);margin-top:4px}
+.stat-icon{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:14px}
+
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gray900)}
+
+/* ASSET LIST TABLE */
+.asset-table{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray200);overflow:hidden}
+.table-head{display:grid;grid-template-columns:80px 1fr 120px 100px 110px 80px;padding:10px 20px;background:var(--gray50);border-bottom:1px solid var(--gray200);gap:12px}
+.th{font-size:11px;font-weight:500;color:var(--gray600);text-transform:uppercase;letter-spacing:.5px}
+.table-row{display:grid;grid-template-columns:80px 1fr 120px 100px 110px 80px;padding:14px 20px;border-bottom:1px solid var(--gray100);gap:12px;align-items:center;cursor:pointer;transition:.1s}
+.table-row:hover{background:var(--gray50)}
+.table-row:last-child{border-bottom:none}
+.asset-id{font-size:12px;font-family:monospace;color:var(--green-mid);font-weight:500}
+.asset-name-cell .name{font-size:13.5px;font-weight:500;color:var(--gray900)}
+.asset-name-cell .addr{font-size:11.5px;color:var(--gray400);margin-top:2px}
+.asset-type-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:500}
+.badge-land{background:var(--green-pale);color:var(--green)}
+.badge-building{background:var(--blue-pale);color:var(--blue)}
+.badge-contract{background:var(--amber-pale);color:var(--amber)}
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-green{background:var(--green-light)}
+.dot-amber{background:var(--amber-light)}
+.dot-red{background:#E53935}
+.logs-count{font-size:13px;font-weight:500;color:var(--gray600);text-align:center}
+.action-btn-sm{padding:5px 12px;font-size:12px;border-radius:var(--radius-sm);background:var(--green-pale);color:var(--green);border:none;cursor:pointer;font-weight:500;transition:.1s}
+.action-btn-sm:hover{background:var(--green-pale2)}
+
+/* ASSET DETAIL */
+.asset-detail-header{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray200);padding:24px;margin-bottom:20px}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.detail-badge-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.detail-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--gray900);margin-bottom:4px}
+.detail-id{font-size:13px;font-family:monospace;color:var(--green-mid)}
+.detail-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px;padding-top:20px;border-top:1px solid var(--gray200)}
+.detail-meta-item .label{font-size:11px;color:var(--gray600);margin-bottom:4px}
+.detail-meta-item .value{font-size:14px;font-weight:500;color:var(--gray900)}
+.qr-box{width:80px;height:80px;background:var(--gray100);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;border:1px solid var(--gray200);flex-shrink:0}
+.qr-svg{width:60px;height:60px}
+
+.detail-grid{display:grid;grid-template-columns:1fr 340px;gap:20px}
+
+/* LOG CHAIN */
+.log-chain-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray200);overflow:hidden}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--gray200);display:flex;justify-content:space-between;align-items:center}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.log-entry{padding:18px 20px;border-bottom:1px solid var(--gray100);position:relative}
+.log-entry:last-child{border-bottom:none}
+.log-entry.current{background:var(--green-pale)}
+.log-num-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.log-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px}
+.log-badge.current{background:var(--green-mid);color:#fff}
+.log-badge.old{background:var(--gray200);color:var(--gray600)}
+.log-date{font-size:12px;color:var(--gray400)}
+.log-type{font-size:13.5px;font-weight:500;color:var(--gray900);margin-bottom:6px}
+.log-detail{font-size:12px;color:var(--gray600);line-height:1.5}
+.log-photo-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.05)}
+.photo-thumb{width:48px;height:48px;background:var(--gray200);border-radius:var(--radius-sm);object-fit:cover;border:1px solid var(--gray200)}
+.photo-meta{font-size:11px;color:var(--gray400);line-height:1.6}
+.log-connector{width:1px;height:16px;background:var(--gray200);margin-left:36px}
+
+/* OWNERSHIP CARD */
+.owner-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray200);overflow:hidden;margin-bottom:16px}
+.owner-row{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--gray100)}
+.owner-row:last-child{border-bottom:none}
+.owner-avatar{width:36px;height:36px;border-radius:50%;background:var(--green-pale);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--green);flex-shrink:0}
+.owner-name{font-size:13.5px;font-weight:500;color:var(--gray900)}
+.owner-share{font-size:12px;color:var(--gray600)}
+.share-bar-wrap{flex:1;height:6px;background:var(--gray200);border-radius:3px;margin:0 8px}
+.share-bar{height:6px;background:var(--green-mid);border-radius:3px}
+.share-pct{font-size:12px;font-weight:600;color:var(--green-mid);min-width:32px;text-align:right}
+
+/* REGISTER FORM */
+.form-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray200);padding:28px;margin-bottom:20px}
+.form-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:20px;color:var(--gray900)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:0}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:12px;font-weight:500;color:var(--gray600);margin-bottom:6px;display:block}
+.form-input{width:100%;padding:10px 14px;border:1px solid var(--gray200);border-radius:var(--radius-sm);font-size:14px;font-family:'Inter',sans-serif;color:var(--gray900);background:#fff;outline:none;transition:.15s}
+.form-input:focus{border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(46,125,50,.1)}
+.form-select{width:100%;padding:10px 14px;border:1px solid var(--gray200);border-radius:var(--radius-sm);font-size:14px;font-family:'Inter',sans-serif;color:var(--gray900);background:#fff;outline:none;cursor:pointer;appearance:none;transition:.15s}
+.form-select:focus{border-color:var(--green-mid)}
+.form-section{margin-bottom:24px}
+.form-section-title{font-size:13px;font-weight:600;color:var(--gray600);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--gray100);text-transform:uppercase;letter-spacing:.5px}
+
+/* CAMERA WIDGET */
+.camera-widget{background:var(--gray900);border-radius:var(--radius-lg);aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;margin-bottom:12px}
+.camera-overlay{text-align:center;color:rgba(255,255,255,.7)}
+.camera-icon{font-size:36px;margin-bottom:8px}
+.camera-label{font-size:13px;font-weight:500;color:rgba(255,255,255,.8)}
+.camera-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
+.camera-corners .corner{position:absolute;width:24px;height:24px;border-color:var(--green-light);border-style:solid;border-width:0}
+.corner.tl{top:16px;left:16px;border-top-width:2px;border-left-width:2px;border-radius:2px 0 0 0}
+.corner.tr{top:16px;right:16px;border-top-width:2px;border-right-width:2px;border-radius:0 2px 0 0}
+.corner.bl{bottom:16px;left:16px;border-bottom-width:2px;border-left-width:2px;border-radius:0 0 0 2px}
+.corner.br{bottom:16px;right:16px;border-bottom-width:2px;border-right-width:2px;border-radius:0 0 2px 0}
+.live-indicator{position:absolute;top:14px;right:50%;transform:translateX(50%);background:rgba(229,57,53,.9);color:#fff;font-size:10px;font-weight:600;padding:3px 10px;border-radius:999px;display:flex;align-items:center;gap:4px;letter-spacing:.5px}
+.live-dot{width:5px;height:5px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.gps-tag{position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.8);font-size:10px;padding:4px 8px;border-radius:6px}
+.time-tag{position:absolute;bottom:14px;right:14px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.8);font-size:10px;padding:4px 8px;border-radius:6px}
+
+/* MAP SCREEN */
+.map-placeholder{background:#e8f0e8;border-radius:var(--radius-lg);height:360px;border:1px solid var(--gray200);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.map-bg{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(46,125,50,.04) 0,rgba(46,125,50,.04) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,rgba(46,125,50,.04) 0,rgba(46,125,50,.04) 1px,transparent 1px,transparent 40px)}
+.map-pin{position:absolute;width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center}
+.map-pin::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;position:absolute}
+.pin-label{position:absolute;white-space:nowrap;font-size:10px;font-weight:600;background:rgba(0,0,0,.7);color:#fff;padding:3px 7px;border-radius:4px;bottom:28px;left:50%;transform:translateX(-50%)}
+.map-legend{display:flex;gap:16px;font-size:12px;color:var(--gray600)}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+
+/* ALERTS */
+.alert{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:var(--radius-md);margin-bottom:12px;border:1px solid transparent}
+.alert-success{background:var(--green-pale);border-color:var(--green-pale2)}
+.alert-warning{background:var(--amber-pale);border-color:#FFCC02}
+.alert-info{background:var(--blue-pale);border-color:#90CAF9}
+.alert-icon{font-size:16px;margin-top:1px}
+.alert-title{font-size:13px;font-weight:600;color:var(--gray900);margin-bottom:2px}
+.alert-desc{font-size:12px;color:var(--gray600);line-height:1.5}
+
+/* CONTRACT */
+.contract-timeline{position:relative;padding-left:32px}
+.timeline-item{position:relative;padding-bottom:24px}
+.timeline-item:last-child{padding-bottom:0}
+.timeline-line{position:absolute;left:-21px;top:20px;bottom:0;width:1px;background:var(--gray200)}
+.timeline-item:last-child .timeline-line{display:none}
+.timeline-dot{position:absolute;left:-27px;top:6px;width:12px;height:12px;border-radius:50%;border:2px solid var(--gray200);background:#fff}
+.timeline-dot.done{background:var(--green-mid);border-color:var(--green-mid)}
+.timeline-dot.current{background:var(--amber-light);border-color:var(--amber-light)}
+.timeline-content{background:var(--white);border:1px solid var(--gray200);border-radius:var(--radius-md);padding:14px 16px}
+.timeline-title{font-size:13.5px;font-weight:600;color:var(--gray900);margin-bottom:4px}
+.timeline-date{font-size:11.5px;color:var(--gray400)}
+.timeline-detail{font-size:12px;color:var(--gray600);margin-top:6px;line-height:1.5}
+
+/* PDF EXPORT */
+.export-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray200);padding:20px;margin-bottom:12px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:.15s}
+.export-card:hover{border-color:var(--green-light);background:var(--green-pale)}
+.export-icon{width:48px;height:48px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.export-title{font-size:14px;font-weight:600;color:var(--gray900);margin-bottom:3px}
+.export-desc{font-size:12px;color:var(--gray600);line-height:1.5}
+.export-price{margin-left:auto;text-align:right}
+.export-amount{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--green-mid)}
+.export-label{font-size:11px;color:var(--gray400)}
+
+/* BLOCKCHAIN VERIFY */
+.verify-block{background:var(--soil);border-radius:var(--radius-lg);padding:20px;color:#fff;margin-bottom:20px}
+.verify-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.hash-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.hash-label{font-size:11px;color:rgba(255,255,255,.4);min-width:80px}
+.hash-val{font-size:11px;font-family:monospace;color:#80CBC4;word-break:break-all}
+.chain-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.3);color:#81C784;border-radius:999px;font-size:11px;font-weight:500;padding:4px 12px}
+
+/* SCAN QR screen */
+.qr-scan-area{background:var(--gray900);border-radius:var(--radius-xl);padding:40px;text-align:center;margin-bottom:20px}
+.big-qr{width:200px;height:200px;background:#fff;border-radius:var(--radius-lg);margin:0 auto 20px;padding:12px;display:grid;grid-template-columns:repeat(10,1fr);gap:2px}
+.qr-c{width:100%;aspect-ratio:1;border-radius:2px}
+
+/* NOTIFICATION */
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:14px 20px;border-bottom:1px solid var(--gray100)}
+.notif-item:last-child{border-bottom:none}
+.notif-icon-wrap{width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.notif-text{font-size:13px;color:var(--gray900);line-height:1.5}
+.notif-time{font-size:11px;color:var(--gray400);margin-top:3px}
+.unread-dot{width:8px;height:8px;border-radius:50%;background:var(--green-mid);flex-shrink:0;margin-top:4px}
+
+/* RESPONSIVE NAV for prototype */
+.screen-tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px}
+.screen-tab{padding:7px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;border:1px solid var(--gray200);background:#fff;color:var(--gray600);transition:.1s;flex-shrink:0}
+.screen-tab.active{background:var(--green-mid);color:#fff;border-color:var(--green-mid)}
+.screen-tab:hover:not(.active){background:var(--gray50)}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-hex">🏛️</div>
+        <div class="logo-text">AGRILEDGER</div>
+      </div>
+      <div class="logo-sub">Blockchain Asset Registry</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item active" onclick="showScreen('dashboard')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" onclick="showScreen('assets')">
+        <span class="nav-icon">📋</span><span class="nav-label">My Assets</span>
+        <span class="nav-badge">12</span>
+      </a>
+      <a class="nav-item" onclick="showScreen('register')">
+        <span class="nav-icon">➕</span><span class="nav-label">Register Asset</span>
+      </a>
+      <a class="nav-item" onclick="showScreen('detail')">
+        <span class="nav-icon">🔍</span><span class="nav-label">Asset Detail + Logs</span>
+      </a>
+
+      <div class="nav-section-label">Tools</div>
+      <a class="nav-item" onclick="showScreen('contracts')">
+        <span class="nav-icon">📄</span><span class="nav-label">Contracts</span>
+        <span class="nav-badge">3</span>
+      </a>
+      <a class="nav-item" onclick="showScreen('map')">
+        <span class="nav-icon">🗺️</span><span class="nav-label">Map View</span>
+      </a>
+      <a class="nav-item" onclick="showScreen('export')">
+        <span class="nav-icon">📊</span><span class="nav-label">PDF Export</span>
+      </a>
+      <a class="nav-item" onclick="showScreen('scan')">
+        <span class="nav-icon">📷</span><span class="nav-label">Scan QR</span>
+      </a>
+
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" onclick="showScreen('alerts')">
+        <span class="nav-icon">🔔</span><span class="nav-label">Alerts</span>
+        <span class="nav-badge">5</span>
+      </a>
+      <a class="nav-item" onclick="showScreen('blockchain')">
+        <span class="nav-icon">🔷</span><span class="nav-label">Blockchain Verify</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="user-avatar">RP</div>
+        <div>
+          <div class="user-name">Ram Prasad</div>
+          <div class="user-role">Property Owner</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-actions">
+        <div class="topbar-search">
+          <span style="font-size:14px;color:#9AA0A6">🔍</span>
+          <input type="text" placeholder="Search asset ID or address...">
+        </div>
+        <button class="btn btn-primary" onclick="showScreen('register')">+ Register Asset</button>
+      </div>
+    </div>
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div id="screen-dashboard" class="screen active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label"><span>🌿</span> Total Assets</div>
+          <div class="stat-num">12</div>
+          <div class="stat-sub">↑ 2 added this month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><span>🔗</span> Total Logs</div>
+          <div class="stat-num">47</div>
+          <div class="stat-sub">Immutable blockchain records</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><span>📄</span> Active Contracts</div>
+          <div class="stat-num">3</div>
+          <div class="stat-sub">1 renewal due in 30 days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><span>✅</span> Verified</div>
+          <div class="stat-num">100%</div>
+          <div class="stat-sub">All assets on Polygon chain</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:20px">
+        <div>
+          <div class="section-header">
+            <div class="section-title">Recent Assets</div>
+            <button class="btn btn-outline" onclick="showScreen('assets')">View All →</button>
+          </div>
+          <div class="asset-table">
+            <div class="table-head">
+              <div class="th">ID</div>
+              <div class="th">Asset Name</div>
+              <div class="th">Type</div>
+              <div class="th">Status</div>
+              <div class="th">Logs</div>
+              <div class="th">Action</div>
+            </div>
+            <div class="table-row" onclick="showScreen('detail')">
+              <div class="asset-id">LD-MH-001</div>
+              <div class="asset-name-cell"><div class="name">Survey No. 142, Nashik</div><div class="addr">Village Deola, Nashik, MH</div></div>
+              <div><span class="asset-type-badge badge-land">🌿 Land</span></div>
+              <div><span class="status-badge"><span class="dot dot-green"></span>Active</span></div>
+              <div class="logs-count">3</div>
+              <div><button class="action-btn-sm">View</button></div>
+            </div>
+            <div class="table-row" onclick="showScreen('detail')">
+              <div class="asset-id">BL-MH-004</div>
+              <div class="asset-name-cell"><div class="name">Flat 3B, Pune Residency</div><div class="addr">Kothrud, Pune, MH</div></div>
+              <div><span class="asset-type-badge badge-building">🏠 Building</span></div>
+              <div><span class="status-badge"><span class="dot dot-amber"></span>Rented</span></div>
+              <div class="logs-count">5</div>
+              <div><button class="action-btn-sm">View</button></div>
+            </div>
+            <div class="table-row" onclick="showScreen('detail')">
+              <div class="asset-id">CT-MH-002</div>
+              <div class="asset-name-cell"><div class="name">Lease Agreement — Shop A4</div><div class="addr">Pimpri, Pune, MH</div></div>
+              <div><span class="asset-type-badge badge-contract">📄 Contract</span></div>
+              <div><span class="status-badge"><span class="dot dot-green"></span>Active</span></div>
+              <div class="logs-count">4</div>
+              <div><button class="action-btn-sm">View</button></div>
+            </div>
+            <div class="table-row" onclick="showScreen('detail')">
+              <div class="asset-id">LD-UP-007</div>
+              <div class="asset-name-cell"><div class="name">Khasra 88, Lucknow</div><div class="addr">Kakori Tehsil, Lucknow, UP</div></div>
+              <div><span class="asset-type-badge badge-land">🌿 Land</span></div>
+              <div><span class="status-badge"><span class="dot dot-red"></span>Disputed</span></div>
+              <div class="logs-count">7</div>
+              <div><button class="action-btn-sm">View</button></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="section-header"><div class="section-title">Alerts & Reminders</div></div>
+          <div class="alert alert-warning">
+            <span class="alert-icon">⚠️</span>
+            <div><div class="alert-title">Contract renewal due</div><div class="alert-desc">CT-MH-002 expires in 28 days. Add renewal log now.</div></div>
+          </div>
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <div><div class="alert-title">New verification request</div><div class="alert-desc">HDFC Bank requested asset scan for LD-MH-001.</div></div>
+          </div>
+          <div class="alert alert-success">
+            <span class="alert-icon">✅</span>
+            <div><div class="alert-title">Log verified on Polygon</div><div class="alert-desc">Log #5 of BL-MH-004 confirmed on chain. TxHash saved.</div></div>
+          </div>
+          <div style="margin-top:20px">
+            <div class="section-header"><div class="section-title">Ownership Summary</div></div>
+            <div class="owner-card">
+              <div class="card-header" style="padding:12px 16px"><div style="font-size:12px;font-weight:600;color:#5F6368">LD-MH-001 · Active Owners</div></div>
+              <div class="owner-row">
+                <div class="owner-avatar">RP</div>
+                <div><div class="owner-name">Ram Prasad</div><div class="owner-share">Primary Owner</div></div>
+                <div class="share-bar-wrap"><div class="share-bar" style="width:60%"></div></div>
+                <div class="share-pct">60%</div>
+              </div>
+              <div class="owner-row">
+                <div class="owner-avatar" style="background:#E3F2FD;color:#0D47A1">SS</div>
+                <div><div class="owner-name">Sita Sharma</div><div class="owner-share">Co-owner</div></div>
+                <div class="share-bar-wrap"><div class="share-bar" style="width:40%"></div></div>
+                <div class="share-pct">40%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ASSETS LIST ═══ -->
+    <div id="screen-assets" class="screen">
+      <div class="section-header" style="margin-bottom:20px">
+        <div>
+          <div class="section-title" style="font-size:18px">All Assets</div>
+          <div style="font-size:13px;color:#5F6368;margin-top:2px">12 assets registered · 47 total logs</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <select class="form-select" style="width:140px;padding:8px 12px;font-size:13px">
+            <option>All Types</option><option>Land</option><option>Building</option><option>Contract</option>
+          </select>
+          <button class="btn btn-primary" onclick="showScreen('register')">+ Register Asset</button>
+        </div>
+      </div>
+      <div class="asset-table">
+        <div class="table-head">
+          <div class="th">ID</div><div class="th">Asset Name</div><div class="th">Type</div><div class="th">Status</div><div class="th">Logs</div><div class="th">Action</div>
+        </div>
+        <div class="table-row" onclick="showScreen('detail')"><div class="asset-id">LD-MH-001</div><div class="asset-name-cell"><div class="name">Survey No. 142, Nashik</div><div class="addr">Village Deola, Nashik, MH</div></div><div><span class="asset-type-badge badge-land">🌿 Land</span></div><div><span class="status-badge"><span class="dot dot-green"></span>Active</span></div><div class="logs-count">3</div><div><button class="action-btn-sm">View</button></div></div>
+        <div class="table-row" onclick="showScreen('detail')"><div class="asset-id">BL-MH-004</div><div class="asset-name-cell"><div class="name">Flat 3B, Pune Residency</div><div class="addr">Kothrud, Pune, MH</div></div><div><span class="asset-type-badge badge-building">🏠 Building</span></div><div><span class="status-badge"><span class="dot dot-amber"></span>Rented</span></div><div class="logs-count">5</div><div><button class="action-btn-sm">View</button></div></div>
+        <div class="table-row" onclick="showScreen('detail')"><div class="asset-id">CT-MH-002</div><div class="asset-name-cell"><div class="name">Lease Agreement — Shop A4</div><div class="addr">Pimpri, Pune, MH</div></div><div><span class="asset-type-badge badge-contract">📄 Contract</span></div><div><span class="status-badge"><span class="dot dot-green"></span>Active</span></div><div class="logs-count">4</div><div><button class="action-btn-sm">View</button></div></div>
+        <div class="table-row" onclick="showScreen('detail')"><div class="asset-id">LD-UP-007</div><div class="asset-name-cell"><div class="name">Khasra 88, Lucknow</div><div class="addr">Kakori Tehsil, Lucknow, UP</div></div><div><span class="asset-type-badge badge-land">🌿 Land</span></div><div><span class="status-badge"><span class="dot dot-red"></span>Disputed</span></div><div class="logs-count">7</div><div><button class="action-btn-sm">View</button></div></div>
+        <div class="table-row" onclick="showScreen('detail')"><div class="asset-id">LD-RJ-003</div><div class="asset-name-cell"><div class="name">Plot 22B, Jaipur Scheme</div><div class="addr">Mansarovar, Jaipur, RJ</div></div><div><span class="asset-type-badge badge-land">🌿 Land</span></div><div><span class="status-badge"><span class="dot dot-green"></span>Active</span></div><div class="logs-count">2</div><div><button class="action-btn-sm">View</button></div></div>
+        <div class="table-row" onclick="showScreen('detail')"><div class="asset-id">BL-GJ-009</div><div class="asset-name-cell"><div class="name">Warehouse Block C, Surat</div><div class="addr">GIDC Estate, Surat, GJ</div></div><div><span class="asset-type-badge badge-building">🏠 Building</span></div><div><span class="status-badge"><span class="dot dot-amber"></span>Rented</span></div><div class="logs-count">6</div><div><button class="action-btn-sm">View</button></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ REGISTER ASSET ═══ -->
+    <div id="screen-register" class="screen">
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:24px">
+        <div>
+          <div class="form-card">
+            <div class="form-title">Register New Asset</div>
+            <div class="form-section">
+              <div class="form-section-title">Asset Type</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+                <div onclick="selectType(this,'land')" class="type-btn" style="border:2px solid #2E7D32;border-radius:var(--radius-md);padding:16px;text-align:center;cursor:pointer;background:var(--green-pale)">
+                  <div style="font-size:24px;margin-bottom:6px">🌿</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--green)">Land</div>
+                </div>
+                <div onclick="selectType(this,'building')" class="type-btn" style="border:1px solid var(--gray200);border-radius:var(--radius-md);padding:16px;text-align:center;cursor:pointer">
+                  <div style="font-size:24px;margin-bottom:6px">🏠</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--gray600)">Building</div>
+                </div>
+                <div onclick="selectType(this,'contract')" class="type-btn" style="border:1px solid var(--gray200);border-radius:var(--radius-md);padding:16px;text-align:center;cursor:pointer">
+                  <div style="font-size:24px;margin-bottom:6px">📄</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--gray600)">Contract</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-section">
+              <div class="form-section-title">Basic Information</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Asset Name / Description</label>
+                  <input class="form-input" type="text" placeholder="e.g. Survey No. 142, Nashik">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Survey / Property Tax ID</label>
+                  <input class="form-input" type="text" placeholder="e.g. SUR/MH/142/2024">
+                </div>
+                <div class="form-group full">
+                  <label class="form-label">Complete Address</label>
+                  <input class="form-input" type="text" placeholder="Village, Tehsil, District, State, PIN">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Area (in Acres / Sq.ft)</label>
+                  <input class="form-input" type="text" placeholder="e.g. 2.5 acres">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">State</label>
+                  <select class="form-select">
+                    <option>Maharashtra</option><option>Uttar Pradesh</option><option>Rajasthan</option><option>Gujarat</option><option>Bihar</option><option>Madhya Pradesh</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="form-section">
+              <div class="form-section-title">Owner Details</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Owner Full Name</label>
+                  <input class="form-input" type="text" placeholder="As per Aadhaar">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Aadhaar Number (optional)</label>
+                  <input class="form-input" type="text" placeholder="XXXX-XXXX-XXXX">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Mobile Number</label>
+                  <input class="form-input" type="text" placeholder="+91 XXXXXXXXXX">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Ownership Share %</label>
+                  <input class="form-input" type="text" placeholder="100" value="100">
+                </div>
+              </div>
+              <button class="btn btn-outline" style="margin-top:12px;font-size:12px">+ Add Co-owner</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;justify-content:flex-end">
+            <button class="btn btn-outline">Save Draft</button>
+            <button class="btn btn-primary" onclick="showScreen('capture')">Next: Capture Live Photo →</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-card" style="padding:20px">
+            <div style="font-size:13px;font-weight:600;color:var(--gray600);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Auto-Generated ID</div>
+            <div style="background:var(--green-pale);border-radius:var(--radius-md);padding:16px;text-align:center;margin-bottom:16px">
+              <div style="font-size:11px;color:var(--green);margin-bottom:4px;font-weight:500">ASSET ID</div>
+              <div style="font-family:monospace;font-size:20px;font-weight:700;color:var(--green)">LD-MH-013-2025</div>
+            </div>
+            <div style="font-size:12px;color:var(--gray600);line-height:1.6;margin-bottom:12px">This ID will be permanently linked to a QR code. You can print and attach it to the physical property.</div>
+            <div style="background:var(--gray100);border-radius:var(--radius-md);padding:20px;display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin-bottom:12px" id="qr-preview">
+              <!-- QR grid -->
+            </div>
+            <div style="font-size:11px;color:var(--gray400);text-align:center">QR generated after photo capture</div>
+          </div>
+
+          <div class="form-card" style="padding:20px">
+            <div style="font-size:13px;font-weight:600;color:var(--gray600);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Checklist</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px"><span style="color:var(--green-mid)">✅</span> Asset type selected</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px"><span style="color:var(--green-mid)">✅</span> Basic info filled</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray400)"><span>⬜</span> Owner details added</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray400)"><span>⬜</span> Live photo captured</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray400)"><span>⬜</span> GPS location confirmed</div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--gray400)"><span>⬜</span> Log #1 created on blockchain</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LIVE PHOTO CAPTURE ═══ -->
+    <div id="screen-capture" class="screen">
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:24px">
+        <div>
+          <div class="form-card">
+            <div class="form-title">📷 Capture Live Photo — Mandatory</div>
+            <div style="background:#FFF3E0;border:1px solid #FFCC02;border-radius:var(--radius-md);padding:12px 16px;margin-bottom:20px;font-size:12.5px;color:var(--amber);line-height:1.6">
+              ⚠️ <strong>No gallery upload allowed.</strong> Camera will open directly. Timestamp, GPS coordinates, and device ID will be automatically embedded into the photo metadata.
+            </div>
+            <div class="camera-widget" id="camera-widget" onclick="simulateCapture()">
+              <div class="camera-corners">
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+              <div class="live-indicator"><div class="live-dot"></div> LIVE</div>
+              <div class="camera-overlay" id="cam-idle">
+                <div class="camera-icon">📷</div>
+                <div class="camera-label">Tap to activate camera</div>
+                <div class="camera-sub">Live capture only · No gallery upload</div>
+              </div>
+              <div class="gps-tag">📍 19.0760°N 72.8777°E</div>
+              <div class="time-tag" id="cam-time">--:--</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <button class="btn btn-outline" style="width:100%">🔄 Retake</button>
+              <button class="btn btn-primary" style="width:100%" onclick="showScreen('detail')">✅ Confirm & Create Log #1</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="form-card">
+            <div style="font-size:13px;font-weight:600;color:var(--gray600);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">Photo Metadata</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="background:var(--gray50);border-radius:var(--radius-sm);padding:12px">
+                <div style="font-size:11px;color:var(--gray400);margin-bottom:3px">Capture Timestamp</div>
+                <div style="font-size:13px;font-weight:500;font-family:monospace" id="meta-time">Waiting...</div>
+              </div>
+              <div style="background:var(--gray50);border-radius:var(--radius-sm);padding:12px">
+                <div style="font-size:11px;color:var(--gray400);margin-bottom:3px">GPS Coordinates</div>
+                <div style="font-size:13px;font-weight:500;font-family:monospace">19.0760°N 72.8777°E</div>
+              </div>
+              <div style="background:var(--gray50);border-radius:var(--radius-sm);padding:12px">
+                <div style="font-size:11px;color:var(--gray400);margin-bottom:3px">Device ID (fingerprint)</div>
+                <div style="font-size:11px;font-weight:500;font-family:monospace;word-break:break-all">DEV-a4f8c2e1-9b3d</div>
+              </div>
+              <div style="background:var(--gray50);border-radius:var(--radius-sm);padding:12px">
+                <div style="font-size:11px;color:var(--gray400);margin-bottom:3px">Hash (SHA-256)</div>
+                <div style="font-size:10px;font-weight:500;font-family:monospace;word-break:break-all;color:var(--green-mid)">Pending capture...</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-card" style="margin-top:0">
+            <div style="font-size:13px;font-weight:600;color:var(--gray600);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">What happens next</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--gray600);line-height:1.5">
+              <div>1. Photo + metadata uploaded to Firebase Storage</div>
+              <div>2. Log #1 record created in Firestore</div>
+              <div>3. Log hash stored on Polygon blockchain</div>
+              <div>4. QR code generated & linked</div>
+              <div>5. Asset is now <strong style="color:var(--green-mid)">live and immutable</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ASSET DETAIL + LOG CHAIN ═══ -->
+    <div id="screen-detail" class="screen">
+      <div class="asset-detail-header">
+        <div>
+          <div class="detail-badge-row">
+            <span class="asset-type-badge badge-land">🌿 Land</span>
+            <span class="status-badge"><span class="dot dot-green"></span><span style="font-size:13px;font-weight:500">Active</span></span>
+          </div>
+          <div class="detail-title">Survey No. 142, Village Deola, Nashik</div>
+          <div class="detail-id">Asset ID: LD-MH-001-2024</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div class="qr-box">
+            <svg class="qr-svg" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+              <rect width="60" height="60" fill="white"/>
+              <rect x="4" y="4" width="18" height="18" rx="2" fill="none" stroke="#1B5E20" stroke-width="2"/>
+              <rect x="7" y="7" width="12" height="12" fill="#1B5E20" rx="1"/>
+              <rect x="38" y="4" width="18" height="18" rx="2" fill="none" stroke="#1B5E20" stroke-width="2"/>
+              <rect x="41" y="7" width="12" height="12" fill="#1B5E20" rx="1"/>
+              <rect x="4" y="38" width="18" height="18" rx="2" fill="none" stroke="#1B5E20" stroke-width="2"/>
+              <rect x="7" y="41" width="12" height="12" fill="#1B5E20" rx="1"/>
+              <rect x="28" y="4" width="4" height="4" fill="#1B5E20"/>
+              <rect x="28" y="10" width="4" height="4" fill="#1B5E20"/>
+              <rect x="28" y="16" width="4" height="4" fill="#1B5E20"/>
+              <rect x="34" y="26" width="4" height="4" fill="#1B5E20"/>
+              <rect x="28" y="28" width="4" height="4" fill="#1B5E20"/>
+              <rect x="22" y="28" width="4" height="4" fill="#1B5E20"/>
+              <rect x="22" y="34" width="4" height="4" fill="#1B5E20"/>
+              <rect x="34" y="34" width="4" height="4" fill="#1B5E20"/>
+              <rect x="40" y="28" width="4" height="4" fill="#1B5E20"/>
+              <rect x="46" y="28" width="4" height="4" fill="#1B5E20"/>
+              <rect x="52" y="28" width="4" height="4" fill="#1B5E20"/>
+              <rect x="40" y="40" width="4" height="4" fill="#1B5E20"/>
+              <rect x="46" y="46" width="4" height="4" fill="#1B5E20"/>
+              <rect x="52" y="40" width="4" height="4" fill="#1B5E20"/>
+              <rect x="52" y="52" width="4" height="4" fill="#1B5E20"/>
+            </svg>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-primary">+ Add Update Log</button>
+            <button class="btn btn-outline" onclick="showScreen('export')">Export PDF</button>
+          </div>
+        </div>
+        <div class="detail-meta" style="grid-column:1/-1">
+          <div class="detail-meta-item"><div class="label">Area</div><div class="value">2.5 Acres</div></div>
+          <div class="detail-meta-item"><div class="label">Survey Number</div><div class="value">142/B</div></div>
+          <div class="detail-meta-item"><div class="label">Registered On</div><div class="value">01 Mar 2020</div></div>
+          <div class="detail-meta-item"><div class="label">Total Logs</div><div class="value">3 (Immutable)</div></div>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div>
+          <div class="section-header"><div class="section-title">Log Chain (Immutable History)</div></div>
+          <div class="log-chain-card">
+            <div class="card-header"><div class="card-title">3 Logs · All verified on Polygon</div><span class="chain-badge">🔷 On-Chain</span></div>
+
+            <div class="log-entry current">
+              <div class="log-num-row">
+                <span class="log-badge current">LOG #3 · CURRENT</span>
+                <span class="log-date">15 Jan 2025, 10:42 AM</span>
+              </div>
+              <div class="log-type">Ownership Transfer — Sold to Mohan Sharma</div>
+              <div class="log-detail">Full ownership transferred. Sale price: ₹48,50,000. Registration at Sub-Registrar office Nashik done. Co-ownership: Mohan (60%) + Sita Sharma (40%).</div>
+              <div class="log-photo-row">
+                <div class="photo-thumb" style="background:#C8E6C9;display:flex;align-items:center;justify-content:center;font-size:20px">📷</div>
+                <div class="photo-meta">live_capture_3.jpg<br>📍 19.0760°N, 72.8777°E · 15 Jan 2025 10:42:07<br>🔒 SHA: a4f8c2e1b9d3...</div>
+              </div>
+            </div>
+
+            <div class="log-connector"></div>
+            <div class="log-entry">
+              <div class="log-num-row">
+                <span class="log-badge old">LOG #2</span>
+                <span class="log-date">01 Dec 2024, 3:15 PM</span>
+              </div>
+              <div class="log-type">Status Change — Listed for Sale</div>
+              <div class="log-detail">Property listed for sale at ₹50,00,000. Broker appointed: Mahesh Realty, Nashik. No ownership change.</div>
+              <div class="log-photo-row">
+                <div class="photo-thumb" style="background:#DCEDC8;display:flex;align-items:center;justify-content:center;font-size:20px">📷</div>
+                <div class="photo-meta">live_capture_2.jpg<br>📍 19.0762°N, 72.8781°E · 01 Dec 2024 15:15:22</div>
+              </div>
+            </div>
+
+            <div class="log-connector"></div>
+            <div class="log-entry">
+              <div class="log-num-row">
+                <span class="log-badge old">LOG #1 · GENESIS</span>
+                <span class="log-date">01 Mar 2020, 11:00 AM</span>
+              </div>
+              <div class="log-type">Initial Registration by Ram Prasad</div>
+              <div class="log-detail">First registration. Survey No. 142/B, Village Deola, Nashik. Area: 2.5 acres. Owner: Ram Prasad (100%). Tax ID: MH-NSK-2020-P142.</div>
+              <div class="log-photo-row">
+                <div class="photo-thumb" style="background:#F1F8E9;display:flex;align-items:center;justify-content:center;font-size:20px">📷</div>
+                <div class="photo-meta">live_capture_1.jpg<br>📍 19.0758°N, 72.8775°E · 01 Mar 2020 11:00:51</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-header"><div class="section-title">Current Owners</div><button class="btn btn-outline" style="font-size:12px">Transfer</button></div>
+          <div class="owner-card" style="margin-bottom:16px">
+            <div class="owner-row">
+              <div class="owner-avatar">MS</div>
+              <div><div class="owner-name">Mohan Sharma</div><div class="owner-share">Primary · Since Jan 2025</div></div>
+              <div class="share-bar-wrap"><div class="share-bar" style="width:60%"></div></div>
+              <div class="share-pct">60%</div>
+            </div>
+            <div class="owner-row">
+              <div class="owner-avatar" style="background:#E3F2FD;color:#0D47A1">SS</div>
+              <div><div class="owner-name">Sita Sharma</div><div class="owner-share">Co-owner · Since Jan 2025</div></div>
+              <div class="share-bar-wrap"><div class="share-bar" style="width:40%"></div></div>
+              <div class="share-pct">40%</div>
+            </div>
+          </div>
+
+          <div class="section-header" style="margin-top:20px"><div class="section-title">Blockchain Proof</div></div>
+          <div class="verify-block">
+            <div class="verify-title">🔷 Polygon Blockchain</div>
+            <div class="hash-row"><span class="hash-label">Tx Hash</span><span class="hash-val">0x8f4a2c...e91b</span></div>
+            <div class="hash-row"><span class="hash-label">Block</span><span class="hash-val">#52,847,291</span></div>
+            <div class="hash-row"><span class="hash-label">Network</span><span class="hash-val">Polygon Mainnet</span></div>
+            <div class="hash-row"><span class="hash-label">Gas</span><span class="hash-val">0.0012 MATIC</span></div>
+            <div style="margin-top:14px"><span class="chain-badge">✅ Verified · Cannot be altered</span></div>
+          </div>
+
+          <div class="section-header" style="margin-top:20px"><div class="section-title">Ownership History</div></div>
+          <div class="owner-card">
+            <div class="owner-row"><div class="owner-avatar">MS</div><div><div class="owner-name">Mohan + Sita Sharma</div><div class="owner-share">Log #3 · Jan 2025 – Present</div></div></div>
+            <div class="owner-row"><div class="owner-avatar">RP</div><div><div class="owner-name">Ram Prasad</div><div class="owner-share">Log #1–2 · Mar 2020 – Dec 2024</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CONTRACTS ═══ -->
+    <div id="screen-contracts" class="screen">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-label">Active Contracts</div><div class="stat-num">3</div><div class="stat-sub">All on-chain</div></div>
+        <div class="stat-card"><div class="stat-label">Expiring Soon</div><div class="stat-num" style="color:#E65100">1</div><div class="stat-sub">CT-MH-002 in 28 days</div></div>
+      </div>
+      <div class="section-header"><div class="section-title">Contract: CT-MH-001-2025</div><button class="btn btn-primary">+ New Contract</button></div>
+      <div style="background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray200);padding:24px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--gray200)">
+          <div><div style="font-size:11px;color:var(--gray400);margin-bottom:4px">Party A (Lessor)</div><div style="font-size:14px;font-weight:600">Ram Prasad</div></div>
+          <div><div style="font-size:11px;color:var(--gray400);margin-bottom:4px">Party B (Lessee)</div><div style="font-size:14px;font-weight:600">Mohan Sharma</div></div>
+          <div><div style="font-size:11px;color:var(--gray400);margin-bottom:4px">Contract Period</div><div style="font-size:14px;font-weight:600">01 Jan – 31 Dec 2025</div></div>
+        </div>
+        <div class="section-title" style="margin-bottom:16px">Milestone Log Chain</div>
+        <div class="contract-timeline">
+          <div class="timeline-item">
+            <div class="timeline-line"></div>
+            <div class="timeline-dot done"></div>
+            <div class="timeline-content">
+              <div class="timeline-title">Log #1 — Contract Executed</div>
+              <div class="timeline-date">01 Jan 2025 · Verified on-chain</div>
+              <div class="timeline-detail">Agreement signed. Advance: ₹10,00,000 paid. Document uploaded to IPFS: QmX9ab...</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-line"></div>
+            <div class="timeline-dot done"></div>
+            <div class="timeline-content">
+              <div class="timeline-title">Log #2 — Possession Given</div>
+              <div class="timeline-date">01 Feb 2025 · Verified on-chain</div>
+              <div class="timeline-detail">Keys handed over. Site inspection photo attached. GPS verified.</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-line"></div>
+            <div class="timeline-dot done"></div>
+            <div class="timeline-content">
+              <div class="timeline-title">Log #3 — Full Payment Received</div>
+              <div class="timeline-date">01 Mar 2025 · Verified on-chain</div>
+              <div class="timeline-detail">₹48,00,000 balance received. Receipt uploaded. UTR: HDFC82947...</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot current"></div>
+            <div class="timeline-content" style="border-color:#FF8F00;background:#FFF3E0">
+              <div class="timeline-title" style="color:#E65100">Log #4 — Renewal Pending</div>
+              <div class="timeline-date">Due: 31 Dec 2025</div>
+              <div class="timeline-detail">Contract expires. Add renewal log or mark as complete.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MAP VIEW ═══ -->
+    <div id="screen-map" class="screen">
+      <div class="section-header" style="margin-bottom:16px">
+        <div class="section-title">Asset Map View</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green-mid)"></div>Land</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>Building</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#E65100"></div>Contract</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#B71C1C"></div>Disputed</div>
+          </div>
+          <select class="form-select" style="width:140px;padding:8px 12px;font-size:13px"><option>All Assets</option><option>Land Only</option><option>Buildings</option></select>
+        </div>
+      </div>
+      <div class="map-placeholder">
+        <div class="map-bg"></div>
+        <!-- Simulated map pins -->
+        <div class="map-pin" style="top:35%;left:40%;background:var(--green-mid)">
+          <div class="pin-label">LD-MH-001 · Nashik</div>
+        </div>
+        <div class="map-pin" style="top:55%;left:35%;background:#1565C0">
+          <div class="pin-label">BL-MH-004 · Pune</div>
+        </div>
+        <div class="map-pin" style="top:25%;left:60%;background:#B71C1C">
+          <div class="pin-label">LD-UP-007 · Lucknow (Disputed)</div>
+        </div>
+        <div class="map-pin" style="top:45%;left:25%;background:#E65100">
+          <div class="pin-label">CT-MH-002 · Pimpri</div>
+        </div>
+        <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--gray600);background:rgba(255,255,255,.9);padding:6px 12px;border-radius:999px;border:1px solid var(--gray200)">
+          🗺️ Map — Click pin to open asset
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div class="stat-card" style="text-align:center;cursor:pointer" onclick="showScreen('detail')">
+          <div style="font-size:20px;margin-bottom:6px">🌿</div>
+          <div style="font-size:13px;font-weight:600">LD-MH-001</div>
+          <div style="font-size:11px;color:var(--gray400)">Nashik · Active</div>
+        </div>
+        <div class="stat-card" style="text-align:center;cursor:pointer" onclick="showScreen('detail')">
+          <div style="font-size:20px;margin-bottom:6px">🏠</div>
+          <div style="font-size:13px;font-weight:600">BL-MH-004</div>
+          <div style="font-size:11px;color:var(--gray400)">Pune · Rented</div>
+        </div>
+        <div class="stat-card" style="text-align:center;cursor:pointer" onclick="showScreen('detail')">
+          <div style="font-size:20px;margin-bottom:6px">⚠️</div>
+          <div style="font-size:13px;font-weight:600;color:#B71C1C">LD-UP-007</div>
+          <div style="font-size:11px;color:var(--gray400)">Lucknow · Disputed</div>
+        </div>
+        <div class="stat-card" style="text-align:center;cursor:pointer" onclick="showScreen('detail')">
+          <div style="font-size:20px;margin-bottom:6px">📄</div>
+          <div style="font-size:13px;font-weight:600">CT-MH-002</div>
+          <div style="font-size:11px;color:var(--gray400)">Pimpri · Contract</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PDF EXPORT ═══ -->
+    <div id="screen-export" class="screen">
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:24px">
+        <div>
+          <div class="section-header" style="margin-bottom:20px"><div class="section-title">Export Legal Documents</div></div>
+          <div class="export-card">
+            <div class="export-icon" style="background:#E8F5E9">📋</div>
+            <div>
+              <div class="export-title">Full Audit Report</div>
+              <div class="export-desc">All logs, photos, owner history, GPS, timestamps. Blockchain verified. Best for court or bank submission.</div>
+            </div>
+            <div class="export-price"><div class="export-amount">₹200</div><div class="export-label">per report</div></div>
+          </div>
+          <div class="export-card">
+            <div class="export-icon" style="background:#E3F2FD">🏷️</div>
+            <div>
+              <div class="export-title">Current Ownership Certificate</div>
+              <div class="export-desc">Latest log + current owners + QR code. For property sale or mutation application.</div>
+            </div>
+            <div class="export-price"><div class="export-amount">₹100</div><div class="export-label">per report</div></div>
+          </div>
+          <div class="export-card">
+            <div class="export-icon" style="background:#FFF3E0">📄</div>
+            <div>
+              <div class="export-title">Contract Summary PDF</div>
+              <div class="export-desc">Parties, period, milestones, payment status. Includes IPFS document links.</div>
+            </div>
+            <div class="export-price"><div class="export-amount">₹150</div><div class="export-label">per report</div></div>
+          </div>
+          <div class="export-card">
+            <div class="export-icon" style="background:#F3E5F5">🗺️</div>
+            <div>
+              <div class="export-title">Land Survey Report</div>
+              <div class="export-desc">GPS coordinates, area calculation, boundary photos. For bank loan application.</div>
+            </div>
+            <div class="export-price"><div class="export-amount">₹200</div><div class="export-label">per report</div></div>
+          </div>
+          <div class="export-card" style="border:2px solid var(--green-light)">
+            <div class="export-icon" style="background:var(--green-pale)">⭐</div>
+            <div>
+              <div class="export-title">All-in-One Bundle</div>
+              <div class="export-desc">Full audit + ownership cert + survey report. Best value for loan or legal proceedings.</div>
+            </div>
+            <div class="export-price"><div class="export-amount">₹399</div><div class="export-label">bundle</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="form-card">
+            <div class="form-title" style="font-size:14px">PDF Includes</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--gray700)">
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--green-mid)">✅</span> Blockchain timestamp proof</div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--green-mid)">✅</span> Scannable QR code (live asset link)</div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--green-mid)">✅</span> All live photos with metadata</div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--green-mid)">✅</span> Complete ownership history</div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--green-mid)">✅</span> GPS coordinates + map</div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--green-mid)">✅</span> Tamper-evident digital signature</div>
+            </div>
+          </div>
+          <div class="verify-block" style="margin-top:12px">
+            <div class="verify-title">🔒 Legal Validity</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.7">BhumiChain reports carry blockchain proof accepted by HDFC Bank, SBI, and Axis Bank for property loan verification. Polygon timestamp is court-admissible as digital evidence under IT Act 2000 Section 65B.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ QR SCAN ═══ -->
+    <div id="screen-scan" class="screen">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <div style="background:var(--gray900);border-radius:var(--radius-xl);padding:32px;text-align:center;margin-bottom:20px">
+            <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;font-weight:500">POINT CAMERA AT QR CODE</div>
+            <div style="width:200px;height:200px;border-radius:var(--radius-lg);margin:0 auto;border:3px solid var(--green-light);display:flex;align-items:center;justify-content:center;position:relative">
+              <div style="position:absolute;top:-2px;left:-2px;width:24px;height:24px;border-top:3px solid var(--green-light);border-left:3px solid var(--green-light);border-radius:2px 0 0 0"></div>
+              <div style="position:absolute;top:-2px;right:-2px;width:24px;height:24px;border-top:3px solid var(--green-light);border-right:3px solid var(--green-light);border-radius:0 2px 0 0"></div>
+              <div style="position:absolute;bottom:-2px;left:-2px;width:24px;height:24px;border-bottom:3px solid var(--green-light);border-left:3px solid var(--green-light);border-radius:0 0 0 2px"></div>
+              <div style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-bottom:3px solid var(--green-light);border-right:3px solid var(--green-light);border-radius:0 0 2px 0"></div>
+              <div style="color:rgba(255,255,255,.3);font-size:40px">📷</div>
+            </div>
+            <div style="margin-top:20px;font-size:12px;color:rgba(255,255,255,.4)">Or enter Asset ID manually</div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <input class="form-input" type="text" placeholder="e.g. LD-MH-001-2024" style="flex:1;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#fff">
+              <button class="btn btn-primary" onclick="showScreen('detail')">Search</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="form-card">
+            <div class="form-title" style="font-size:14px">How QR Scan Works</div>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:13px">
+              <div style="background:var(--green-pale);border-radius:var(--radius-md);padding:12px">
+                <div style="font-weight:600;color:var(--green);margin-bottom:4px">🌍 Public Access</div>
+                <div style="color:var(--gray600)">Anyone scanning gets current asset status, type, and verification badge. No login needed.</div>
+              </div>
+              <div style="background:#E3F2FD;border-radius:var(--radius-md);padding:12px">
+                <div style="font-weight:600;color:#0D47A1;margin-bottom:4px">🔐 Owner Login</div>
+                <div style="color:var(--gray600)">Logged-in owner sees full ownership details, all logs, and can add updates.</div>
+              </div>
+              <div style="background:#FFF3E0;border-radius:var(--radius-md);padding:12px">
+                <div style="font-weight:600;color:#E65100;margin-bottom:4px">🏦 Bank/Verifier</div>
+                <div style="color:var(--gray600)">API partners get structured JSON with blockchain proof for automated loan processing.</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-card" style="margin-top:12px">
+            <div class="form-title" style="font-size:14px">Generate Printable QR</div>
+            <div style="background:white;border:1px solid var(--gray200);border-radius:var(--radius-md);padding:20px;text-align:center;margin-bottom:12px">
+              <svg viewBox="0 0 80 80" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+                <rect width="80" height="80" fill="white"/>
+                <rect x="5" y="5" width="24" height="24" rx="2" fill="none" stroke="#1B5E20" stroke-width="2.5"/>
+                <rect x="9" y="9" width="16" height="16" fill="#1B5E20" rx="1"/>
+                <rect x="51" y="5" width="24" height="24" rx="2" fill="none" stroke="#1B5E20" stroke-width="2.5"/>
+                <rect x="55" y="9" width="16" height="16" fill="#1B5E20" rx="1"/>
+                <rect x="5" y="51" width="24" height="24" rx="2" fill="none" stroke="#1B5E20" stroke-width="2.5"/>
+                <rect x="9" y="55" width="16" height="16" fill="#1B5E20" rx="1"/>
+                <rect x="35" y="5" width="5" height="5" fill="#1B5E20"/>
+                <rect x="35" y="13" width="5" height="5" fill="#1B5E20"/>
+                <rect x="35" y="21" width="5" height="5" fill="#1B5E20"/>
+                <rect x="43" y="35" width="5" height="5" fill="#1B5E20"/>
+                <rect x="35" y="35" width="5" height="5" fill="#1B5E20"/>
+                <rect x="51" y="35" width="5" height="5" fill="#1B5E20"/>
+                <rect x="59" y="43" width="5" height="5" fill="#1B5E20"/>
+                <rect x="67" y="43" width="5" height="5" fill="#1B5E20"/>
+                <rect x="43" y="51" width="5" height="5" fill="#1B5E20"/>
+                <rect x="51" y="59" width="5" height="5" fill="#1B5E20"/>
+                <rect x="59" y="67" width="5" height="5" fill="#1B5E20"/>
+              </svg>
+              <div style="font-family:monospace;font-size:11px;color:var(--gray600);margin-top:8px">LD-MH-001-2024</div>
+            </div>
+            <button class="btn btn-primary" style="width:100%">⬇️ Download Print-ready QR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ALERTS ═══ -->
+    <div id="screen-alerts" class="screen">
+      <div class="section-header" style="margin-bottom:20px"><div class="section-title">Alerts & Notifications</div><button class="btn btn-outline">Mark all read</button></div>
+      <div class="asset-table">
+        <div class="notif-item">
+          <div class="notif-icon-wrap" style="background:#FFF3E0">⚠️</div>
+          <div style="flex:1"><div class="notif-text"><strong>Contract renewal due in 28 days</strong> — CT-MH-002 (Shop A4 Lease) expires 31 Dec 2025. Add renewal log or close contract.</div><div class="notif-time">Today, 9:00 AM</div></div>
+          <div class="unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon-wrap" style="background:#E3F2FD">🏦</div>
+          <div style="flex:1"><div class="notif-text"><strong>HDFC Bank verification request</strong> — Asset LD-MH-001 scan initiated by HDFC Home Loans. Respond within 48 hours.</div><div class="notif-time">Today, 8:30 AM</div></div>
+          <div class="unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon-wrap" style="background:#E8F5E9">✅</div>
+          <div style="flex:1"><div class="notif-text"><strong>Log #5 confirmed on Polygon</strong> — BL-MH-004 update verified. TxHash: 0x9e4f...c21a. Gas: 0.0009 MATIC.</div><div class="notif-time">Yesterday, 4:12 PM</div></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon-wrap" style="background:#FFEBEE">🚨</div>
+          <div style="flex:1"><div class="notif-text"><strong>Dispute flag on LD-UP-007</strong> — Third party claim filed at Kakori Tehsil court. Log #7 marked disputed. Consult legal advisor.</div><div class="notif-time">2 days ago</div></div>
+          <div class="unread-dot" style="background:#B71C1C"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon-wrap" style="background:#E8F5E9">🔗</div>
+          <div style="flex:1"><div class="notif-text"><strong>Log chain integrity check passed</strong> — All 47 logs across 12 assets verified against Polygon chain. No tampering detected.</div><div class="notif-time">3 days ago</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ BLOCKCHAIN VERIFY ═══ -->
+    <div id="screen-blockchain" class="screen">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <div class="section-header" style="margin-bottom:16px"><div class="section-title">Verify Asset on Blockchain</div></div>
+          <div class="form-card">
+            <div style="font-size:13px;font-weight:600;color:var(--gray600);margin-bottom:14px">Enter Asset ID or Log Hash</div>
+            <input class="form-input" type="text" placeholder="Asset ID: LD-MH-001-2024 or Tx Hash" style="margin-bottom:12px">
+            <button class="btn btn-primary" style="width:100%">🔍 Verify on Polygon</button>
+          </div>
+          <div class="verify-block">
+            <div class="verify-title">🔷 Verification Result — LD-MH-001</div>
+            <div class="hash-row"><span class="hash-label">Asset ID</span><span class="hash-val">LD-MH-001-2024</span></div>
+            <div class="hash-row"><span class="hash-label">Total Logs</span><span class="hash-val">3 (all verified)</span></div>
+            <div class="hash-row"><span class="hash-label">Last Tx Hash</span><span class="hash-val">0x8f4a2c9e...b3f1e91b</span></div>
+            <div class="hash-row"><span class="hash-label">Block Number</span><span class="hash-val">#52,847,291</span></div>
+            <div class="hash-row"><span class="hash-label">Network</span><span class="hash-val">Polygon Mainnet</span></div>
+            <div class="hash-row"><span class="hash-label">Timestamp</span><span class="hash-val">15 Jan 2025 10:42:07 UTC</span></div>
+            <div class="hash-row"><span class="hash-label">Integrity</span><span class="hash-val" style="color:#81C784">✅ Chain intact · No tampering</span></div>
+            <div style="margin-top:14px;display:flex;gap:8px">
+              <span class="chain-badge">✅ Verified</span>
+              <span style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">View on PolygonScan ↗</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="section-header" style="margin-bottom:16px"><div class="section-title">All Assets — Chain Status</div></div>
+          <div class="asset-table">
+            <div class="table-head" style="grid-template-columns:80px 1fr 80px 80px">
+              <div class="th">ID</div><div class="th">Asset</div><div class="th">Logs</div><div class="th">Status</div>
+            </div>
+            <div class="table-row" style="grid-template-columns:80px 1fr 80px 80px"><div class="asset-id">LD-MH-001</div><div>Survey 142, Nashik</div><div class="logs-count">3</div><div><span style="color:var(--green-mid);font-size:12px;font-weight:600">✅</span></div></div>
+            <div class="table-row" style="grid-template-columns:80px 1fr 80px 80px"><div class="asset-id">BL-MH-004</div><div>Flat 3B, Pune</div><div class="logs-count">5</div><div><span style="color:var(--green-mid);font-size:12px;font-weight:600">✅</span></div></div>
+            <div class="table-row" style="grid-template-columns:80px 1fr 80px 80px"><div class="asset-id">CT-MH-002</div><div>Lease, Pimpri</div><div class="logs-count">4</div><div><span style="color:var(--green-mid);font-size:12px;font-weight:600">✅</span></div></div>
+            <div class="table-row" style="grid-template-columns:80px 1fr 80px 80px"><div class="asset-id">LD-UP-007</div><div>Khasra 88, Lucknow</div><div class="logs-count">7</div><div><span style="color:#E65100;font-size:12px;font-weight:600">⚠️</span></div></div>
+            <div class="table-row" style="grid-template-columns:80px 1fr 80px 80px"><div class="asset-id">LD-RJ-003</div><div>Plot 22B, Jaipur</div><div class="logs-count">2</div><div><span style="color:var(--green-mid);font-size:12px;font-weight:600">✅</span></div></div>
+          </div>
+          <div style="margin-top:20px;background:var(--green-pale);border-radius:var(--radius-lg);padding:20px;border:1px solid var(--green-pale2)">
+            <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px">Network: Polygon Mainnet</div>
+            <div style="font-size:12px;color:var(--gray600);line-height:1.7">47 total logs · 12 assets · Last sync: 2 min ago<br>Average gas per log: 0.0011 MATIC (≈ ₹0.07)<br>Total chain cost to date: ₹3.29</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const titles={'dashboard':'Dashboard','assets':'My Assets','register':'Register Asset','capture':'Live Photo Capture','detail':'Asset Detail — LD-MH-001','contracts':'Contracts','map':'Map View','export':'PDF Export','scan':'QR Scan','alerts':'Alerts','blockchain':'Blockchain Verify'};
+  document.getElementById('topbar-title').textContent=titles[id]||id;
+}
+
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',function(){
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+function selectType(el,type){
+  document.querySelectorAll('.type-btn').forEach(b=>{b.style.border='1px solid #E8EAED';b.style.background='';b.querySelector('div:last-child').style.color='#5F6368'});
+  el.style.border='2px solid #2E7D32';
+  el.style.background='#E8F5E9';
+  el.querySelector('div:last-child').style.color='#1B5E20';
+}
+
+function simulateCapture(){
+  const w=document.getElementById('camera-widget');
+  const t=document.getElementById('cam-time');
+  const m=document.getElementById('meta-time');
+  const now=new Date();
+  const ts=now.toLocaleDateString('en-IN')+' '+now.toLocaleTimeString('en-IN');
+  t.textContent=now.toLocaleTimeString('en-IN');
+  if(m) m.textContent=ts;
+  w.style.background='#2E7D32';
+  setTimeout(()=>{w.style.background='#202124'},500);
+}
+
+setInterval(()=>{
+  const t=document.getElementById('cam-time');
+  if(t) t.textContent=new Date().toLocaleTimeString('en-IN');
+},1000);
+</script>
+</body>
+</html>
